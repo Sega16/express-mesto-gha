@@ -15,13 +15,13 @@ module.exports.getUser = (req, res) => {
       if (user === null) {
         return res
           .status(404)
-          .send({ message: 'Пользователь не найден' })
+          .send({ message: 'Пользователь по указанному Id не найден.' });
       }
       return res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Некоректный Id' });
+        return res.status(400).send({ message: 'Передан некорректный Id' });
       }
       return res.status(500).send({ message: 'Ошибка' });
     });
