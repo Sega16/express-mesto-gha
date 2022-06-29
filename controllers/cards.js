@@ -1,4 +1,3 @@
-
 const Card = require('../models/card');
 
 // GET /cards
@@ -42,47 +41,45 @@ module.exports.deleteCard = (req, res) => {
 };
 
 // PUT /cards/:cardId/likes
-module.exports.likeCard = (req, res) =>
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
-    { new: true },
-  )
-    .then((card) => {
-      if (card === null) {
-        return res.status(404).send({ message: 'Несуществующий id карточки' });
-      }
-      return res.send({ data: card });
-    })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Некорректные данные для лайка' });
-      }
-      if (error.name === 'CastError') {
-        return res.status(400).send({ message: 'Несуществующий id карточки' });
-      }
-      return res.status(500).send({ message: 'Ошибка' });
-    });
+module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
+  req.params.cardId,
+  { $addToSet: { likes: req.user._id } },
+  { new: true },
+)
+  .then((card) => {
+    if (card === null) {
+      return res.status(404).send({ message: 'Несуществующий id карточки' });
+    }
+    return res.send({ data: card });
+  })
+  .catch((error) => {
+    if (error.name === 'ValidationError') {
+      return res.status(400).send({ message: 'Некорректные данные для лайка' });
+    }
+    if (error.name === 'CastError') {
+      return res.status(400).send({ message: 'Несуществующий id карточки' });
+    }
+    return res.status(500).send({ message: 'Ошибка' });
+  });
 
 // DELETE /cards/:cardId/likes
-module.exports.dislikeCard = (req, res) =>
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
-    { new: true },
-  )
-    .then((card) => {
-      if (card === null) {
-        return res.status(404).send({ message: 'Несуществующий id карточки' });
-      }
-      return res.send({ data: card });
-    })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Некорректные данные для лайка' });
-      }
-      if (error.name === 'CastError') {
-        return res.status(400).send({ message: 'Несуществующий _id карточки' });
-      }
-      return res.status(500).send({ message: 'Ошибка' });
-    });
+module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
+  req.params.cardId,
+  { $pull: { likes: req.user._id } },
+  { new: true },
+)
+  .then((card) => {
+    if (card === null) {
+      return res.status(404).send({ message: 'Несуществующий id карточки' });
+    }
+    return res.send({ data: card });
+  })
+  .catch((error) => {
+    if (error.name === 'ValidationError') {
+      return res.status(400).send({ message: 'Некорректные данные для лайка' });
+    }
+    if (error.name === 'CastError') {
+      return res.status(400).send({ message: 'Несуществующий _id карточки' });
+    }
+    return res.status(500).send({ message: 'Ошибка' });
+  });
