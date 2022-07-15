@@ -34,7 +34,11 @@ module.exports.createUser = (req, res, next) => {
   // User.create({ name, about, avatar })
   bcrypt.hash(password, 10)
     .then((hash) => User.create({
-      name, about, avatar, email, password: hash,
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
     }))
     .then((user) => res.status(201).send({
       name: user.name,
@@ -43,13 +47,13 @@ module.exports.createUser = (req, res, next) => {
       email: user.email,
       _id: user._id,
     }))
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
         next(new ValidError('Неверные данные'));
-      } else if (error.code === 11000) {
+      } else if (err.code === 11000) {
         next(new ConflictError('Такой пользователь уже есть'));
       } else {
-        next(error);
+        next(err);
       }
     });
 };
@@ -67,11 +71,11 @@ module.exports.updateUser = (req, res, next) => {
       }
       res.send(user);
     })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
         return next(new ValidError('Некорректные данные при обновлении профиля'));
       }
-      return next(error);
+      return next(err);
     });
 };
 
@@ -87,11 +91,11 @@ module.exports.updateAvatar = (req, res, next) => {
         throw new NotFoundError('Пользователь с таким id не найден');
       }
     })
-    .catch((error) => {
-      if (error.name === 'ValidationError') {
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
         return next(new ValidError('Некорректные данные при обновлении аватара'));
       }
-      return next(error);
+      return next(err);
     });
 };
 
