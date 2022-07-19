@@ -1,54 +1,54 @@
 const express = require('express');
-
-const { PORT = 3000 } = process.env;
-const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const { celebrate, Joi, errors } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+const userRouter = require('./routes/users');
+const cardRouter = require('./routes/cards');
+const { linkValidator } = require('./utils/linkValidator');
+const errorsServer = require('./middlewares/errorServer');
 const NotFoundError = require('./errors/notFoundError404');
+require('dotenv').config();
+
+const { PORT = 3000 } = process.env;
 
 const app = express();
+mongoose.connect('mongodb://localhost:27017/mestodb', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-mongoose.connect('mongodb://localhost:27017/mestodb');
+app.use(cookieParser());
+app.use(express.json());
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().regex(/^(https?:\/\/(www\.)?([a-zA-z0-9-]){1,}\.?([a-zA-z0-9]){2,8}(\/?([a-zA-z0-9-])*\/?)*\/?([-._~:/?#[]@!\$&'\(\)\*\+,;=])*)/),
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), createUser);
-
-app.post('/signin', celebrate({
+app.post('/signin', celebrate({ // вход
   body: Joi.object().keys({
     email: Joi.string().required().email(),
-    password: Joi.string().required(),
+    password: Joi.string().required().min(8),
   }),
 }), login);
 
-app.use(auth);
-app.use('/', require('./routes/users'));
-app.use('/', require('./routes/cards'));
+app.post('/signup', celebrate({ // регистрация
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().custom(linkValidator),
+  }),
+}), createUser);
 
-app.use('*', (_req, res, next) => {
-  next(new NotFoundError('Не найдено'));
-});
+app.use(auth);
+
+app.use(userRouter);
+app.use(cardRouter);
+
+app.use('*', (req, res, next) => next(
+  new NotFoundError('Упс! Тут пусто'),
+));
+
 app.use(errors());
-app.use((error, req, res, next) => {
-  const { statusCode = 500, message } = error;
-  res
-    .status(error.statusCode)
-    .send({
-      message: statusCode === 500
-        ? 'Произошла ошибка сервера'
-        : message,
-    });
-  next();
-});
+app.use(errorsServer);
 
 app.listen(PORT);
