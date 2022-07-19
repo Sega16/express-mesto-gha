@@ -49,31 +49,35 @@ module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-
-  bcrypt.hash(password, 10)
-    .then((hash) => {
-      User.create({
-        name,
-        about,
-        avatar,
-        email,
-        password: hash,
-      })
-        .then((user) => {
-          const newUser = user.toObject();
-          delete newUser.password;
-
-          res.status(201).send(newUser);
-        })
-        .catch((error) => {
-          if (error.name === 'ValidationError') {
-            next(new ValidError('Неправильные данные'));
-          } else if (error.code === 11000) {
-            next(new ConflictError('Email занят'));
-          } else {
-            next(error);
-          }
-        });
+  User.findOne({ email })
+    .then((userWithSameEmail) => {
+      if (userWithSameEmail) {
+        throw new ConflictError('Email занят');
+      }
+      return bcrypt.hash(password, 10);
+    })
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
+    .then((user) => {
+      res.status(201).send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+      });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new ValidError('Неверные данные для создания юзера'));
+        return;
+      }
+      next(err);
     });
 };
 

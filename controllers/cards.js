@@ -31,11 +31,11 @@ module.exports.deleteCard = (req, res, next) => {
     .orFail(() => new NotFoundError('Карточка не найдена'))
     .then((card) => {
       if (card.owner.toString() !== req.user._id) {
-        throw (new ForbiddenError('Нельзя удалить чужую карточку'));
+        throw new ForbiddenError('Нельзя удалить чужую карточку');
       }
       Card.findByIdAndRemove(req.params.cardId)
         .then((removeCard) => res.send(removeCard))
-        .cetch(next);
+        .catch(next);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
